@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+
+tests/.tmp/
+
+database/*.db
+database/backups/
+
+*.log
+.DS_Store
+Thumbs.db

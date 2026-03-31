@@ -1,0 +1,56 @@
+{
+  "name": "restaurant-pos",
+  "version": "1.0.0",
+  "description": "Restaurant billing desktop app with Electron and SQLite",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --test tests/**/*.test.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0"
+  },
+  "devDependencies": {
+    "electron": "^34.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.casabenito.pos",
+    "productName": "Casa Benito POS",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "src/**/*",
+      "database/**/*",
+      "assets/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

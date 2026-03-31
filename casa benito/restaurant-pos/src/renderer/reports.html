@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/reports.css" />
+</head>
+<body>
+  <div class="reports-shell">
+    <header class="reports-topbar">
+      <div>
+        <h1>Reports Dashboard</h1>
+        <p>Sales analytics and operational insights</p>
+      </div>
+      <div class="top-actions">
+        <label class="date-filter" for="reportDateInput">
+          <span>Date</span>
+          <input id="reportDateInput" type="date" />
+        </label>
+        <div class="period-presets" role="group" aria-label="Period presets">
+          <button class="btn btn-light period-btn" type="button" data-period="TODAY">Today</button>
+          <button class="btn btn-light period-btn" type="button" data-period="YESTERDAY">Yesterday</button>
+          <button class="btn btn-light period-btn" type="button" data-period="LAST_7_DAYS">Last 7</button>
+          <button class="btn btn-light period-btn" type="button" data-period="LAST_30_DAYS">Last 30</button>
+        </div>
+        <button id="loadReportsBtn" class="btn btn-primary" type="button">Refresh</button>
+        <button id="exportAllBtn" class="btn btn-light" type="button">Export All CSV</button>
+        <button id="exportPdfBtn" class="btn btn-light" type="button">Export PDF</button>
+        <button id="printSummaryBtn" class="btn btn-light" type="button">Print Summary</button>
+        <button id="themeToggle" class="btn btn-light" type="button">Toggle Theme</button>
+        <button id="goPosBtn" class="btn btn-light" type="button">POS</button>
+        <button id="goAdminBtn" class="btn btn-light" type="button">Admin</button>
+        <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+      </div>
+    </header>
+
+    <main class="reports-grid">
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <p class="kpi-label">Total Revenue</p>
+          <h2 id="kpiRevenue">Rs 0.00</h2>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Total Orders</p>
+          <h2 id="kpiOrders">0</h2>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Paid Orders</p>
+          <h2 id="kpiPaidOrders">0</h2>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Cancelled Orders</p>
+          <h2 id="kpiCancelledOrders">0</h2>
+        </article>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h3>Last 7 Days / 30 Days Comparative Trends</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="comparative">Export CSV</button>
+        </div>
+        <div class="compare-grid">
+          <article class="compare-card">
+            <h4>Revenue</h4>
+            <p id="cmpRevenue7">7D: Rs 0.00 (0.0%)</p>
+            <p id="cmpRevenue30">30D: Rs 0.00 (0.0%)</p>
+          </article>
+          <article class="compare-card">
+            <h4>Orders</h4>
+            <p id="cmpOrders7">7D: 0 (0.0%)</p>
+            <p id="cmpOrders30">30D: 0 (0.0%)</p>
+          </article>
+        </div>
+        <div id="dailyTrend30Chart" class="bar-chart"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Hourly Sales Trend</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="hourly">Export CSV</button>
+        </div>
+        <div id="hourlyChart" class="bar-chart"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Payment Breakdown</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="payment">Export CSV</button>
+        </div>
+        <div id="paymentChart" class="bar-chart"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Top Selling Items</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="top">Export CSV</button>
+        </div>
+        <div id="topItemsTable" class="table-wrap"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Least Selling Items</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="least">Export CSV</button>
+        </div>
+        <div id="leastItemsTable" class="table-wrap"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Category-wise Revenue</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="category">Export CSV</button>
+        </div>
+        <div id="categoryTable" class="table-wrap"></div>
+      </section>
+
+      <section class="panel panel-half">
+        <div class="panel-head">
+          <h3>Cancelled Orders</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="cancelled">Export CSV</button>
+        </div>
+        <div id="cancelledTable" class="table-wrap"></div>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h3>Daily Sales Summary (with item names)</h3>
+          <button class="btn btn-light export-btn" type="button" data-export-section="daily">Export CSV</button>
+        </div>
+        <div id="dailySummaryTable" class="table-wrap"></div>
+      </section>
+
+      <section id="managementSummaryPrint" class="panel panel-wide print-summary">
+        <div class="panel-head">
+          <h3>Management Summary (Printable)</h3>
+        </div>
+        <div class="summary-grid">
+          <p><strong>Date:</strong> <span id="summaryDate">-</span></p>
+          <p><strong>Total Revenue:</strong> <span id="summaryRevenue">Rs 0.00</span></p>
+          <p><strong>Total Orders:</strong> <span id="summaryOrders">0</span></p>
+          <p><strong>Paid Orders:</strong> <span id="summaryPaidOrders">0</span></p>
+          <p><strong>Cancelled Orders:</strong> <span id="summaryCancelledOrders">0</span></p>
+          <p><strong>7D Revenue:</strong> <span id="summaryRev7">-</span></p>
+          <p><strong>30D Revenue:</strong> <span id="summaryRev30">-</span></p>
+        </div>
+        <div>
+          <h4>Top 3 Items</h4>
+          <ul id="summaryTopItems"></ul>
+        </div>
+        <div>
+          <h4>Payment Breakdown</h4>
+          <ul id="summaryPayment"></ul>
+        </div>
+      </section>
+    </main>
+
+    <p id="statusMessage" class="status-message"></p>
+  </div>
+
+  <script src="./components/ui.js"></script>
+  <script src="./js/reports.js"></script>
+</body>
+</html>

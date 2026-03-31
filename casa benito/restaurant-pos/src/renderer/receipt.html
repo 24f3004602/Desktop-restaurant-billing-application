@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Receipt Preview & Printer Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/receipt.css" />
+</head>
+<body>
+  <div class="settings-shell">
+    <header class="settings-topbar">
+      <div>
+        <h1>Receipt Preview & Printer Settings</h1>
+        <p>80mm print profile and receipt validation tools</p>
+      </div>
+      <div class="top-actions">
+        <button id="themeToggle" class="btn btn-light" type="button">Toggle Theme</button>
+        <button id="printerTestBtn" class="btn btn-light" type="button">Printer Test</button>
+        <button id="openReportsBtn" class="btn btn-light" type="button">Reports</button>
+        <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+        <button id="goPosBtn" class="btn btn-light" type="button">POS</button>
+        <button id="goAdminBtn" class="btn btn-primary" type="button">Admin</button>
+      </div>
+    </header>
+
+    <main class="settings-grid">
+      <section class="panel">
+        <div class="panel-head"><h2>Printer Profile</h2></div>
+        <form id="profileForm" class="form-grid">
+          <label>
+            <span>Profile Name</span>
+            <input id="profileNameInput" type="text" required />
+          </label>
+
+          <label>
+            <span>Printer Device</span>
+            <select id="printerSelect"></select>
+          </label>
+
+          <label>
+            <span>Paper Width (mm)</span>
+            <input id="paperWidthInput" type="number" min="50" max="120" required />
+          </label>
+
+          <label>
+            <span>Cutter Feed Lines</span>
+            <input id="cutterFeedLinesInput" type="number" min="0" max="20" required />
+          </label>
+
+          <label class="inline-check">
+            <input id="silentPrintInput" type="checkbox" />
+            <span>Silent Print</span>
+          </label>
+
+          <button class="btn btn-primary" type="submit">Save Profile</button>
+          <button class="btn btn-light" type="button" id="refreshPrintersBtn">Refresh Printers</button>
+        </form>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head"><h2>Receipt Preview</h2></div>
+        <div class="preview-controls">
+          <input id="orderIdInput" type="number" min="1" placeholder="Enter order ID" />
+          <button id="loadReceiptBtn" class="btn btn-light" type="button">Load Preview</button>
+          <button id="printReceiptBtn" class="btn btn-primary" type="button">Print This Receipt</button>
+        </div>
+        <div id="previewMeta" class="muted"></div>
+        <iframe id="receiptFrame" class="receipt-frame" title="Receipt Preview"></iframe>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head"><h2>Database Backup & Restore</h2></div>
+        <div class="backup-actions">
+          <button id="createBackupBtn" class="btn btn-primary" type="button">Create Backup</button>
+          <button id="refreshBackupsBtn" class="btn btn-light" type="button">Refresh Backups</button>
+        </div>
+        <div id="backupList" class="list-wrap"></div>
+        <pre id="dryRunOutput" class="dry-run-output"></pre>
+      </section>
+    </main>
+
+    <p id="statusMessage" class="status-message"></p>
+  </div>
+
+  <script src="./js/receipt.js"></script>
+</body>
+</html>

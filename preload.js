@@ -1,13 +1,5 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("authAPI", {
-  isConfigured: () => ipcRenderer.invoke("auth:is-configured"),
-  setupAdmin: (payload) => ipcRenderer.invoke("auth:setup-admin", payload),
-  login: (payload) => ipcRenderer.invoke("auth:login", payload),
-  getSession: (payload) => ipcRenderer.invoke("auth:get-session", payload),
-  logout: (payload) => ipcRenderer.invoke("auth:logout", payload)
-});
-
 contextBridge.exposeInMainWorld("posAPI", {
   getMenu: (payload) => ipcRenderer.invoke("pos:get-menu", payload),
   getTables: (payload) => ipcRenderer.invoke("pos:get-tables", payload),
@@ -63,4 +55,14 @@ contextBridge.exposeInMainWorld("systemAPI", {
 contextBridge.exposeInMainWorld("reportsAPI", {
   getDashboard: (payload) => ipcRenderer.invoke("reports:get-dashboard", payload),
   exportSummaryPdf: (payload) => ipcRenderer.invoke("reports:export-summary-pdf", payload)
+});
+
+contextBridge.exposeInMainWorld("appAPI", {
+  getConfig: () => ipcRenderer.invoke("system:get-app-config"),
+  checkForUpdates: () => ipcRenderer.invoke("system:check-for-updates")
+});
+
+contextBridge.exposeInMainWorld("printerAPI", {
+  list: () => ipcRenderer.invoke("printer:list"),
+  printHtml: (payload) => ipcRenderer.invoke("printer:print-html", payload)
 });

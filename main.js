@@ -1,13 +1,11 @@
 const path = require("path");
 const fs = require("fs");
 const { app, BrowserWindow, dialog } = require("electron");
-const { initializeDatabase } = require("./src/backend/db");
-const { registerAuthHandlers } = require("./src/backend/controllers/authController");
-const { registerPosHandlers } = require("./src/backend/controllers/posController");
-const { registerAdminHandlers } = require("./src/backend/controllers/adminController");
-const { registerSystemHandlers } = require("./src/backend/controllers/systemController");
-const { registerReportsHandlers } = require("./src/backend/controllers/reportsController");
-const { runStartupHealthChecks } = require("./src/backend/services/healthService");
+const { startBackend, stopBackend } = require("./electron/backendProcess");
+const { registerIpcHandlers } = require("./electron/ipcHandlers");
+const { setupAutoUpdater } = require("./electron/autoUpdater");
+
+let mainWindow = null;
 
 function appendCrashLog(message, error = null) {
   try {
@@ -42,7 +40,7 @@ function registerCrashHandlers() {
 }
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1480,
     height: 920,
     minWidth: 1220,
@@ -57,7 +55,20 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, "src", "renderer", "login.html"));
+  const devServerUrl = process.env.ELECTRON_START_URL;
+  if (devServerUrl) {
+    mainWindow.loadURL(devServerUrl);
+    return;
+  }
+
+  const builtIndex = path.join(__dirname, "frontend", "dist", "index.html");
+  if (!fs.existsSync(builtIndex)) {
+    dialog.showErrorBox("Frontend Build Missing", "Vue frontend build not found. Run `npm run build` or `npm run dev`.");
+    app.quit();
+    return;
+  }
+
+  mainWindow.loadFile(builtIndex);
 }
 
 const singleInstance = app.requestSingleInstanceLock();
@@ -78,16 +89,22 @@ if (!singleInstance) {
 }
 
 app.whenReady()
-  .then(() => {
+  .then(async () => {
     registerCrashHandlers();
-    initializeDatabase();
-    runStartupHealthChecks();
-    registerAuthHandlers();
-    registerPosHandlers();
-    registerAdminHandlers();
-    registerSystemHandlers();
-    registerReportsHandlers();
+    await startBackend();
+    const updater = setupAutoUpdater(console);
     createWindow();
+
+    registerIpcHandlers({
+      getMainWindow: () => mainWindow,
+      checkForUpdates: updater.checkForUpdates,
+    });
+
+    if (updater.enabled) {
+      updater.checkForUpdates().catch((error) => {
+        appendCrashLog("updater-check-failed", error);
+      });
+    }
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -102,7 +119,12 @@ app.whenReady()
   });
 
 app.on("window-all-closed", () => {
+  stopBackend();
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", () => {
+  stopBackend();
 });

@@ -2,11 +2,32 @@ node_modules/
 dist/
 out/
 
+.venv/
+venv/
+env/
+backend/.venv/
+frontend/node_modules/
+frontend/dist/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
 tests/.tmp/
 
 database/*.db
 database/backups/
 
 *.log
+.env
+.env.*
+
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/

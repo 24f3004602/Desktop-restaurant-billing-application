@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AxiosError } from "axios";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { useBillingStore } from "../../stores/billing";
 import { useOrdersStore } from "../../stores/orders";
@@ -23,6 +23,7 @@ const paymentMethod = ref<"cash" | "card" | "upi">("cash");
 const paymentAmountRupees = ref(0);
 const paymentReference = ref("");
 const statusMessage = ref("");
+const isPaid = computed(() => billing.bill?.payment_status === "paid");
 
 function getApiErrorMessage(error: unknown): string {
   const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
@@ -72,6 +73,21 @@ async function addPayment() {
   paymentReference.value = "";
   paymentAmountRupees.value = Number((remainingCents.value / 100).toFixed(2));
 }
+
+function startNewOrder() {
+  orders.clearActiveOrder();
+  billing.clearBilling();
+  discountRupees.value = 0;
+  paymentAmountRupees.value = 0;
+  paymentReference.value = "";
+  statusMessage.value = "Ready for a new order.";
+}
+
+watch(isPaid, (paidNow) => {
+  if (paidNow) {
+    statusMessage.value = "Payment completed successfully.";
+  }
+});
 </script>
 
 <template>
@@ -85,6 +101,14 @@ async function addPayment() {
       Generate Bill
     </button>
     <p v-if="statusMessage" class="mt-2 text-xs text-red-600">{{ statusMessage }}</p>
+
+    <div v-if="isPaid" class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2">
+      <p class="text-xs font-medium text-emerald-800">Bill fully paid.</p>
+      <button class="mt-2 w-full rounded bg-emerald-700 px-3 py-2 text-sm text-white" @click="startNewOrder">
+        Start New Order
+      </button>
+    </div>
+
     <p class="mt-2 text-sm">Payable: {{ formatCurrencyFromCents(payableCents) }}</p>
 
     <template v-if="billing.bill">

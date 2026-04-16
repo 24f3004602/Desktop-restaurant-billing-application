@@ -52,6 +52,14 @@ Change these via environment variables:
 
 - http://127.0.0.1:8000/api/v1
 
+## Data security note
+
+- SQLite files are not encrypted by default in this project.
+- For production, use one of:
+	- OS-level disk encryption (BitLocker, FileVault, LUKS)
+	- Encrypted volume mounts for Docker deployments
+	- SQLCipher-backed SQLite builds (application-level DB encryption)
+
 ## Auth highlights
 
 - Login is rate-limited to 5 attempts/minute per IP.

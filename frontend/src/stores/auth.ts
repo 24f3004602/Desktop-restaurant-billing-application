@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
 import { endpoints } from "../api/endpoints";
-import { apiClient } from "../api/http";
+import { apiClient, clearSession } from "../api/http";
 import type { Role, User } from "../types/models";
 
 interface AuthState {
@@ -60,8 +60,7 @@ export const useAuthStore = defineStore("auth", {
       this.token = null;
       this.refreshToken = null;
       this.user = null;
-      localStorage.removeItem("pos_token");
-      localStorage.removeItem("pos_refresh_token");
+      clearSession();
     },
   },
 });

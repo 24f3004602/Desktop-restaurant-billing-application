@@ -19,7 +19,7 @@ const refreshClient = axios.create({
 
 let refreshPromise: Promise<string | null> | null = null;
 
-function clearSession() {
+export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 }

@@ -45,7 +45,7 @@ def generate_bill(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot bill an empty order")
 
     if order.bill:
-        return order.bill
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Bill already exists for this order")
 
     subtotal, tax, discount, grand_total = _compute_totals(order, payload.discount_cents)
     bill = Bill(

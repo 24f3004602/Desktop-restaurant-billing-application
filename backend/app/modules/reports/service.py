@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.modules.reports.models import Bill, Order
-from app.modules.reports.schemas import DailySalesReport, OrderHistoryRow
+from app.modules.reports.schemas import DailySalesReport, OrderHistoryRow, SalesByDayRow
 
 
 def get_daily_sales(db: Session, date: str | None = None) -> DailySalesReport:
@@ -61,3 +61,30 @@ def get_order_history(
         )
 
     return result
+
+
+def get_sales_by_day(
+    db: Session,
+    from_date: str | None = None,
+    to_date: str | None = None,
+) -> list[SalesByDayRow]:
+    query = db.query(
+        func.date(Bill.issued_at).label("day"),
+        func.count(Bill.id),
+        func.coalesce(func.sum(Bill.grand_total_cents), 0),
+    )
+
+    if from_date:
+        query = query.filter(func.date(Bill.issued_at) >= from_date)
+    if to_date:
+        query = query.filter(func.date(Bill.issued_at) <= to_date)
+
+    rows = query.group_by(func.date(Bill.issued_at)).order_by(func.date(Bill.issued_at).asc()).all()
+    return [
+        SalesByDayRow(
+            date=day,
+            total_orders=int(total_orders or 0),
+            total_sales_cents=int(total_sales_cents or 0),
+        )
+        for day, total_orders, total_sales_cents in rows
+    ]

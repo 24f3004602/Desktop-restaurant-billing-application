@@ -4,6 +4,7 @@
 
 - Domain modules are under app/modules/:
 	- auth/
+	- users/
 	- inventory/
 	- orders/
 	- billing/
@@ -33,8 +34,12 @@ Project root helper:
 
 ## Default admin
 
-- username: admin
-- password: admin123
+- On first run, backend/.env is auto-created (if missing) with:
+	- a random SECRET_KEY
+	- a random DEFAULT_ADMIN_PASSWORD
+	- DEFAULT_ADMIN_USERNAME=admin
+
+Check backend/.env for the generated credentials in development, and rotate them before production use.
 
 Change these via environment variables:
 
@@ -46,6 +51,16 @@ Change these via environment variables:
 ## API base URL
 
 - http://127.0.0.1:8000/api/v1
+
+## Auth highlights
+
+- Login is rate-limited to 5 attempts/minute per IP.
+- Accounts are temporarily locked after repeated failed attempts (configurable via AUTH_MAX_FAILED_ATTEMPTS and AUTH_LOCKOUT_MINUTES).
+- Token flow:
+	- POST /auth/login returns access_token + refresh_token
+	- POST /auth/refresh rotates and returns a fresh access_token + refresh_token
+- Password change:
+	- PATCH /users/me/password
 
 ## Alembic migrations
 

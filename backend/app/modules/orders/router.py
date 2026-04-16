@@ -41,9 +41,9 @@ def add_item(
     order_id: int,
     payload: OrderItemCreate,
     db: Session = Depends(get_db_session),
-    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
+    current_user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
 ) -> Order:
-    return add_order_item(db, order_id, payload)
+    return add_order_item(db, order_id, payload, current_user.id)
 
 
 @router.patch("/{order_id}/items/{item_id}", response_model=OrderRead)
@@ -52,9 +52,9 @@ def patch_item(
     item_id: int,
     payload: OrderItemUpdate,
     db: Session = Depends(get_db_session),
-    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
+    current_user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
 ) -> Order:
-    return update_order_item(db, order_id, item_id, payload)
+    return update_order_item(db, order_id, item_id, payload, current_user.id)
 
 
 @router.delete("/{order_id}/items/{item_id}", response_model=OrderRead)
@@ -62,9 +62,9 @@ def remove_item(
     order_id: int,
     item_id: int,
     db: Session = Depends(get_db_session),
-    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
+    current_user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
 ) -> Order:
-    return delete_order_item(db, order_id, item_id)
+    return delete_order_item(db, order_id, item_id, current_user.id)
 
 
 @router.post("/{order_id}/kot")

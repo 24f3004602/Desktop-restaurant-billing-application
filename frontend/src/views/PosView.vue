@@ -2,6 +2,7 @@
 import { ref } from "vue";
 
 import BillingPanel from "../components/pos/BillingPanel.vue";
+import LowStockWidget from "../components/common/LowStockWidget.vue";
 import KotPanel from "../components/pos/KotPanel.vue";
 import MenuList from "../components/pos/MenuList.vue";
 import OrderCart from "../components/pos/OrderCart.vue";
@@ -69,6 +70,8 @@ async function createOrder() {
       </p>
       <p class="mt-1 text-xs text-amber-700" v-if="statusMessage">{{ statusMessage }}</p>
     </section>
+
+    <LowStockWidget />
 
     <div class="grid gap-4 lg:grid-cols-12">
     <section class="lg:col-span-3"><TableGrid /></section>

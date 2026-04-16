@@ -23,6 +23,21 @@ export interface MenuItem {
   price_cents: number;
   gst_percent: number;
   is_available: boolean;
+  track_inventory: boolean;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  is_low_stock: boolean;
+}
+
+export interface StockAdjustment {
+  id: number;
+  menu_item_id: number;
+  change_quantity: number;
+  quantity_after: number;
+  reason: string;
+  note: string | null;
+  created_by: number | null;
+  created_at: string;
 }
 
 export interface RestaurantTable {
@@ -36,6 +51,7 @@ export interface RestaurantTable {
 export interface OrderItem {
   id: number;
   menu_item_id: number;
+  menu_item_name: string;
   quantity: number;
   special_note: string | null;
   kot_status: "pending" | "sent" | "prepared" | "served";

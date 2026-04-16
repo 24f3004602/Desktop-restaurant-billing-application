@@ -19,6 +19,11 @@ interface PrinterDevice {
   isDefault: boolean;
 }
 
+interface SavePdfResult {
+  canceled: boolean;
+  filePath?: string;
+}
+
 interface Window {
   appAPI?: {
     getConfig: () => Promise<PrinterApiResponse<{ appVersion: string; platform: string }>>;
@@ -27,5 +32,6 @@ interface Window {
   printerAPI?: {
     list: () => Promise<PrinterApiResponse<PrinterDevice[]>>;
     printHtml: (payload: { html: string; silent?: boolean; deviceName?: string }) => Promise<PrinterApiResponse>;
+    savePdf: (payload: { html: string; filePath?: string }) => Promise<PrinterApiResponse<SavePdfResult>>;
   };
 }

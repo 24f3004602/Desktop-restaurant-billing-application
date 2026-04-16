@@ -29,9 +29,6 @@ jobs:
       - name: Frontend typecheck
         run: npm --prefix frontend run typecheck
 
-      - name: Run smoke tests
-        run: npm test
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -42,6 +39,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pytest
+
+      - name: Run smoke tests
+        run: npm test
 
       - name: Run Python tests
         run: pytest -q

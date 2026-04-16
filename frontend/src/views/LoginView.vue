@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AxiosError } from "axios";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -11,13 +12,18 @@ const username = ref("admin");
 const password = ref("admin123");
 const errorMessage = ref("");
 
+function getErrorMessage(error: unknown): string {
+  const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
+  return axiosError?.response?.data?.error?.message || axiosError?.response?.data?.detail || "Login failed. Check credentials.";
+}
+
 async function onSubmit() {
   errorMessage.value = "";
   try {
     await auth.login(username.value, password.value);
     router.push("/pos");
   } catch (error) {
-    errorMessage.value = "Login failed. Check credentials.";
+    errorMessage.value = getErrorMessage(error);
     console.error(error);
   }
 }

@@ -4,6 +4,7 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import DomainValidationError, InsufficientStockError, NotFoundError
+from app.modules.inventory.service import apply_stock_delta
 from app.modules.orders.models import MenuItem, Order, OrderItem, RestaurantTable
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate, OrderItemUpdate
 
@@ -56,7 +57,7 @@ def get_order(db: Session, order_id: int) -> Order:
     return load_order_or_404(db, order_id)
 
 
-def add_order_item(db: Session, order_id: int, payload: OrderItemCreate) -> Order:
+def add_order_item(db: Session, order_id: int, payload: OrderItemCreate, current_user_id: int) -> Order:
     order = load_order_or_404(db, order_id)
     menu_item = db.query(MenuItem).filter(MenuItem.id == payload.menu_item_id).first()
     if not menu_item:
@@ -70,6 +71,7 @@ def add_order_item(db: Session, order_id: int, payload: OrderItemCreate) -> Orde
     order_item = OrderItem(
         order_id=order.id,
         menu_item_id=menu_item.id,
+        menu_item_name=menu_item.name,
         quantity=payload.quantity,
         unit_price_cents=menu_item.price_cents,
         gst_percent=menu_item.gst_percent,
@@ -77,6 +79,14 @@ def add_order_item(db: Session, order_id: int, payload: OrderItemCreate) -> Orde
         kot_status="pending",
     )
     recalculate_line(order_item)
+    apply_stock_delta(
+        db,
+        menu_item,
+        delta_quantity=-payload.quantity,
+        reason="order_item_add",
+        note=f"order_id={order.id}",
+        created_by=current_user_id,
+    )
 
     db.add(order_item)
     db.commit()
@@ -84,15 +94,33 @@ def add_order_item(db: Session, order_id: int, payload: OrderItemCreate) -> Orde
     return order
 
 
-def update_order_item(db: Session, order_id: int, item_id: int, payload: OrderItemUpdate) -> Order:
+def update_order_item(db: Session, order_id: int, item_id: int, payload: OrderItemUpdate, current_user_id: int) -> Order:
     order = load_order_or_404(db, order_id)
     item = db.query(OrderItem).filter(OrderItem.id == item_id, OrderItem.order_id == order_id).first()
     if not item:
         raise NotFoundError("Order item not found")
 
     update_data = payload.model_dump(exclude_unset=True)
+    current_quantity = item.quantity
     if "quantity" in update_data and update_data["quantity"] <= 0:
         raise DomainValidationError("Quantity must be greater than zero")
+
+    if "quantity" in update_data:
+        next_quantity = int(update_data["quantity"])
+        quantity_delta = next_quantity - current_quantity
+        if quantity_delta != 0:
+            menu_item = db.query(MenuItem).filter(MenuItem.id == item.menu_item_id).first()
+            if not menu_item:
+                raise NotFoundError("Menu item not found")
+
+            apply_stock_delta(
+                db,
+                menu_item,
+                delta_quantity=-quantity_delta,
+                reason="order_item_quantity_update",
+                note=f"order_id={order_id};order_item_id={item_id}",
+                created_by=current_user_id,
+            )
 
     for key, value in update_data.items():
         setattr(item, key, value)
@@ -103,11 +131,22 @@ def update_order_item(db: Session, order_id: int, item_id: int, payload: OrderIt
     return order
 
 
-def delete_order_item(db: Session, order_id: int, item_id: int) -> Order:
+def delete_order_item(db: Session, order_id: int, item_id: int, current_user_id: int) -> Order:
     order = load_order_or_404(db, order_id)
     item = db.query(OrderItem).filter(OrderItem.id == item_id, OrderItem.order_id == order_id).first()
     if not item:
         raise NotFoundError("Order item not found")
+
+    menu_item = db.query(MenuItem).filter(MenuItem.id == item.menu_item_id).first()
+    if menu_item:
+        apply_stock_delta(
+            db,
+            menu_item,
+            delta_quantity=item.quantity,
+            reason="order_item_delete",
+            note=f"order_id={order_id};order_item_id={item_id}",
+            created_by=current_user_id,
+        )
 
     db.delete(item)
     db.commit()

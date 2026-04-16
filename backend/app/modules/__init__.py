@@ -4,6 +4,7 @@ from app.modules.inventory.router import router as inventory_router
 from app.modules.orders.router import router as orders_router
 from app.modules.payments.router import router as payments_router
 from app.modules.reports.router import router as reports_router
+from app.modules.users.router import router as users_router
 
 __all__ = [
     "auth_router",
@@ -12,4 +13,5 @@ __all__ = [
     "billing_router",
     "payments_router",
     "reports_router",
+    "users_router",
 ]

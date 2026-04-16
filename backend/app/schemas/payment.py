@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PaymentCreate(BaseModel):
     method: str
     amount_cents: int
-    reference_no: str | None = None
+    reference_no: str | None = Field(default=None, max_length=80)
 
 
 class PaymentRead(BaseModel):

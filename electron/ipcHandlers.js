@@ -1,6 +1,6 @@
 const { app, ipcMain } = require("electron");
 
-const { listPrinters, printReceiptHtml } = require("./printer");
+const { listPrinters, printReceiptHtml, saveReceiptPdf } = require("./printer");
 
 function registerIpcHandlers({ getMainWindow, checkForUpdates }) {
   ipcMain.handle("system:get-app-config", async () => {
@@ -44,6 +44,17 @@ function registerIpcHandlers({ getMainWindow, checkForUpdates }) {
       return { ok: true };
     } catch (error) {
       return { ok: false, error: error?.message || "Print failed" };
+    }
+  });
+
+  ipcMain.handle("printer:save-pdf", async (_event, payload) => {
+    try {
+      const result = await saveReceiptPdf(payload?.html || "", {
+        filePath: payload?.filePath,
+      });
+      return { ok: true, data: result };
+    } catch (error) {
+      return { ok: false, error: error?.message || "Failed to save PDF" };
     }
   });
 }

@@ -28,6 +28,29 @@ export const useTablesStore = defineStore("tables", {
         }
       }
     },
+    async createTable(payload: {
+      table_number: string;
+      seats: number;
+      status?: RestaurantTable["status"];
+      is_active?: boolean;
+    }) {
+      const { data } = await apiClient.post<RestaurantTable>(endpoints.tables, payload);
+      await this.fetchTables();
+      return data;
+    },
+    async updateTable(
+      tableId: number,
+      payload: Partial<{
+        table_number: string;
+        seats: number;
+        status: RestaurantTable["status"];
+        is_active: boolean;
+      }>
+    ) {
+      const { data } = await apiClient.patch<RestaurantTable>(`${endpoints.tables}/${tableId}`, payload);
+      await this.fetchTables();
+      return data;
+    },
     selectTable(tableId: number | null) {
       this.selectedTableId = tableId;
     },

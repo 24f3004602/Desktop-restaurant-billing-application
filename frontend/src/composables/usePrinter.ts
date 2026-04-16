@@ -43,11 +43,25 @@ export function usePrinter() {
     }
   }
 
+  async function savePdf(html: string, filePath?: string) {
+    const response = await window.printerAPI?.savePdf?.({
+      html,
+      filePath,
+    });
+
+    if (!response?.ok) {
+      throw new Error(response?.error || "Unable to save PDF");
+    }
+
+    return response.data;
+  }
+
   return {
     printers,
     loading,
     error,
     loadPrinters,
     printHtml,
+    savePdf,
   };
 }

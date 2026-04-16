@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db_session, require_roles
 from app.core.roles import Role
 from app.models.user import User
-from app.modules.inventory.models import Category, MenuItem, RestaurantTable
+from app.modules.inventory.models import Category, InventoryMovement, MenuItem, RestaurantTable
 from app.modules.inventory.schemas import (
     AvailabilityUpdate,
     CategoryCreate,
@@ -12,6 +12,8 @@ from app.modules.inventory.schemas import (
     CategoryUpdate,
     MenuItemCreate,
     MenuItemRead,
+    StockAdjustmentCreate,
+    StockAdjustmentRead,
     MenuItemUpdate,
     TableCreate,
     TableRead,
@@ -22,8 +24,10 @@ from app.modules.inventory.service import (
     create_category,
     create_menu_item,
     create_table,
+    adjust_menu_item_stock,
     list_categories,
     list_menu_items,
+    list_menu_item_stock_movements,
     list_tables,
     set_menu_item_availability,
     update_category,
@@ -91,6 +95,25 @@ def patch_menu_item_availability(
     _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER)),
 ) -> MenuItem:
     return set_menu_item_availability(db, item_id, payload)
+
+
+@router.post("/menu-items/{item_id}/stock-adjustments", response_model=MenuItemRead)
+def create_stock_adjustment(
+    item_id: int,
+    payload: StockAdjustmentCreate,
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER)),
+) -> MenuItem:
+    return adjust_menu_item_stock(db, item_id, payload, current_user.id)
+
+
+@router.get("/menu-items/{item_id}/stock-adjustments", response_model=list[StockAdjustmentRead])
+def get_stock_adjustments(
+    item_id: int,
+    db: Session = Depends(get_db_session),
+    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER)),
+) -> list[InventoryMovement]:
+    return list_menu_item_stock_movements(db, item_id)
 
 
 @router.get("/tables", response_model=list[TableRead])

@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db_session, require_roles
 from app.core.roles import Role
 from app.models.user import User
-from app.modules.reports.schemas import DailySalesReport, OrderHistoryRow
-from app.modules.reports.service import get_daily_sales, get_order_history
+from app.modules.reports.schemas import DailySalesReport, OrderHistoryRow, SalesByDayRow
+from app.modules.reports.service import get_daily_sales, get_order_history, get_sales_by_day
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -28,3 +28,13 @@ def order_history(
     _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
 ) -> list[OrderHistoryRow]:
     return get_order_history(db, from_date=from_date, to_date=to_date, table_id=table_id)
+
+
+@router.get("/sales-by-day", response_model=list[SalesByDayRow])
+def sales_by_day(
+    from_date: str | None = Query(default=None, alias="from"),
+    to_date: str | None = Query(default=None, alias="to"),
+    db: Session = Depends(get_db_session),
+    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER)),
+) -> list[SalesByDayRow]:
+    return get_sales_by_day(db, from_date=from_date, to_date=to_date)

@@ -9,6 +9,12 @@ class DailySalesReport(BaseModel):
     total_discount_cents: int
 
 
+class SalesByDayRow(BaseModel):
+    date: str
+    total_orders: int
+    total_sales_cents: int
+
+
 class OrderHistoryRow(BaseModel):
     order_id: int
     order_no: str

@@ -32,7 +32,8 @@ function onSelectTable(tableId: number) {
         ]"
         @click="onSelectTable(table.id)"
       >
-        {{ table.table_number }}
+        <p>{{ table.table_number }}</p>
+        <p class="text-[11px] text-slate-500">{{ table.seats }} seats</p>
         <span class="ml-1 text-slate-500">{{ table.status }}</span>
       </button>
     </div>

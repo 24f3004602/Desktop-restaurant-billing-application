@@ -10,7 +10,7 @@ const { orders, totalCents, increase, decrease, remove } = useCart();
     <h3 class="mb-3 text-sm font-semibold">Current Order</h3>
     <div v-if="orders.activeOrder?.items?.length" class="space-y-2">
       <div v-for="item in orders.activeOrder.items" :key="item.id" class="rounded border p-2 text-sm">
-        <p>Item #{{ item.menu_item_id }} x {{ item.quantity }}</p>
+        <p>{{ item.menu_item_name }} x {{ item.quantity }}</p>
         <p class="text-xs text-slate-500">{{ formatCurrencyFromCents(item.line_total_cents) }}</p>
         <div class="mt-2 flex gap-1">
           <button class="rounded bg-slate-200 px-2 py-1 text-xs" @click="decrease(item.id, item.quantity)">-</button>

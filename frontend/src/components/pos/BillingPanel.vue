@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AxiosError } from "axios";
 import { computed, ref } from "vue";
 
 import { useBillingStore } from "../../stores/billing";
@@ -21,14 +22,29 @@ const discountRupees = ref(0);
 const paymentMethod = ref<"cash" | "card" | "upi">("cash");
 const paymentAmountRupees = ref(0);
 const paymentReference = ref("");
+const statusMessage = ref("");
+
+function getApiErrorMessage(error: unknown): string {
+  const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
+  return (
+    axiosError?.response?.data?.error?.message ||
+    axiosError?.response?.data?.detail ||
+    "Request failed. Please try again."
+  );
+}
 
 async function createBill() {
   if (!orders.activeOrder) {
     return;
   }
-  const bill = await billing.generateBill(orders.activeOrder.id, Math.max(0, Math.round(discountRupees.value * 100)));
-  await billing.fetchPayments(bill.id);
-  paymentAmountRupees.value = Number((remainingCents.value / 100).toFixed(2));
+  statusMessage.value = "";
+  try {
+    const bill = await billing.generateBill(orders.activeOrder.id, Math.max(0, Math.round(discountRupees.value * 100)));
+    await billing.fetchPayments(bill.id);
+    paymentAmountRupees.value = Number((remainingCents.value / 100).toFixed(2));
+  } catch (error) {
+    statusMessage.value = getApiErrorMessage(error);
+  }
 }
 
 async function addPayment() {
@@ -41,11 +57,17 @@ async function addPayment() {
     return;
   }
 
-  await billing.addPayment(billing.bill.id, {
-    method: paymentMethod.value,
-    amount_cents: amountCents,
-    reference_no: paymentReference.value || null,
-  });
+  statusMessage.value = "";
+  try {
+    await billing.addPayment(billing.bill.id, {
+      method: paymentMethod.value,
+      amount_cents: amountCents,
+      reference_no: paymentReference.value || null,
+    });
+  } catch (error) {
+    statusMessage.value = getApiErrorMessage(error);
+    return;
+  }
 
   paymentReference.value = "";
   paymentAmountRupees.value = Number((remainingCents.value / 100).toFixed(2));
@@ -62,6 +84,7 @@ async function addPayment() {
     <button class="w-full rounded bg-slate-900 px-3 py-2 text-sm text-white" :disabled="billing.loadingBill" @click="createBill">
       Generate Bill
     </button>
+    <p v-if="statusMessage" class="mt-2 text-xs text-red-600">{{ statusMessage }}</p>
     <p class="mt-2 text-sm">Payable: {{ formatCurrencyFromCents(payableCents) }}</p>
 
     <template v-if="billing.bill">

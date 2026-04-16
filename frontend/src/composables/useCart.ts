@@ -20,7 +20,12 @@ export function useCart() {
     if (!orders.activeOrder) {
       return;
     }
-    const nextQty = Math.max(1, qty - 1);
+    const nextQty = qty - 1;
+    if (nextQty <= 0) {
+      await remove(itemId);
+      return;
+    }
+
     await orders.updateItem(orders.activeOrder.id, itemId, { quantity: nextQty });
   }
 

@@ -64,5 +64,6 @@ contextBridge.exposeInMainWorld("appAPI", {
 
 contextBridge.exposeInMainWorld("printerAPI", {
   list: () => ipcRenderer.invoke("printer:list"),
-  printHtml: (payload) => ipcRenderer.invoke("printer:print-html", payload)
+  printHtml: (payload) => ipcRenderer.invoke("printer:print-html", payload),
+  savePdf: (payload) => ipcRenderer.invoke("printer:save-pdf", payload)
 });

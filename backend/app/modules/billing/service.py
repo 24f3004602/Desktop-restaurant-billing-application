@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import DomainValidationError, NotFoundError
+from app.core.exceptions import ConflictError, DomainValidationError, NotFoundError
 from app.modules.billing.models import Bill, Order, OrderItem
 from app.modules.billing.schemas import BillGenerateRequest
 
@@ -33,7 +33,7 @@ def generate_bill(db: Session, order_id: int, payload: BillGenerateRequest, curr
         raise DomainValidationError("Cannot bill an empty order")
 
     if order.bill:
-        return order.bill
+        raise ConflictError("Bill already exists for this order")
 
     subtotal, tax, discount, grand_total = compute_order_totals(order.items, payload.discount_cents)
     bill = Bill(

@@ -2,14 +2,15 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ConflictError, NotFoundError
-from app.modules.inventory.models import Category, MenuItem, RestaurantTable
+from app.core.exceptions import ConflictError, DomainValidationError, InsufficientStockError, NotFoundError
+from app.modules.inventory.models import Category, InventoryMovement, MenuItem, RestaurantTable
 from app.modules.inventory.schemas import (
     AvailabilityUpdate,
     CategoryCreate,
     CategoryUpdate,
     MenuItemCreate,
     MenuItemUpdate,
+    StockAdjustmentCreate,
     TableCreate,
     TableStatusUpdate,
     TableUpdate,
@@ -53,12 +54,59 @@ def list_menu_items(db: Session) -> list[MenuItem]:
     return db.query(MenuItem).order_by(MenuItem.id.asc()).all()
 
 
+def load_menu_item_or_404(db: Session, item_id: int) -> MenuItem:
+    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+    if not item:
+        raise NotFoundError("Menu item not found")
+    return item
+
+
+def apply_stock_delta(
+    db: Session,
+    menu_item: MenuItem,
+    delta_quantity: int,
+    reason: str,
+    created_by: int | None,
+    note: str | None = None,
+) -> None:
+    if delta_quantity == 0 or not menu_item.track_inventory:
+        return
+
+    previous_quantity = menu_item.stock_quantity
+    next_quantity = menu_item.stock_quantity + delta_quantity
+    if next_quantity < 0:
+        raise InsufficientStockError(f"Insufficient stock for {menu_item.name}. Remaining quantity: {menu_item.stock_quantity}")
+
+    menu_item.stock_quantity = next_quantity
+    if menu_item.stock_quantity == 0:
+        menu_item.is_available = False
+    elif previous_quantity == 0 and not menu_item.is_available:
+        menu_item.is_available = True
+
+    movement = InventoryMovement(
+        menu_item_id=menu_item.id,
+        change_quantity=delta_quantity,
+        quantity_after=menu_item.stock_quantity,
+        reason=reason,
+        note=note,
+        created_by=created_by,
+    )
+    db.add(movement)
+
+
 def create_menu_item(db: Session, payload: MenuItemCreate) -> MenuItem:
     category = db.query(Category).filter(Category.id == payload.category_id).first()
     if not category:
         raise NotFoundError("Category not found")
 
     item = MenuItem(**payload.model_dump())
+    if item.stock_quantity < 0:
+        raise DomainValidationError("Stock quantity cannot be negative")
+    if item.low_stock_threshold < 0:
+        raise DomainValidationError("Low-stock threshold cannot be negative")
+    if item.track_inventory and item.stock_quantity == 0:
+        item.is_available = False
+
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -66,12 +114,17 @@ def create_menu_item(db: Session, payload: MenuItemCreate) -> MenuItem:
 
 
 def update_menu_item(db: Session, item_id: int, payload: MenuItemUpdate) -> MenuItem:
-    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
-    if not item:
-        raise NotFoundError("Menu item not found")
+    item = load_menu_item_or_404(db, item_id)
 
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
+
+    if item.stock_quantity < 0:
+        raise DomainValidationError("Stock quantity cannot be negative")
+    if item.low_stock_threshold < 0:
+        raise DomainValidationError("Low-stock threshold cannot be negative")
+    if item.track_inventory and item.stock_quantity == 0:
+        item.is_available = False
 
     item.updated_at = datetime.utcnow()
     db.commit()
@@ -80,15 +133,54 @@ def update_menu_item(db: Session, item_id: int, payload: MenuItemUpdate) -> Menu
 
 
 def set_menu_item_availability(db: Session, item_id: int, payload: AvailabilityUpdate) -> MenuItem:
-    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
-    if not item:
-        raise NotFoundError("Menu item not found")
+    item = load_menu_item_or_404(db, item_id)
+
+    if payload.is_available and item.track_inventory and item.stock_quantity == 0:
+        raise DomainValidationError("Cannot mark item available while stock quantity is zero")
 
     item.is_available = payload.is_available
     item.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
     return item
+
+
+def adjust_menu_item_stock(
+    db: Session,
+    item_id: int,
+    payload: StockAdjustmentCreate,
+    current_user_id: int,
+) -> MenuItem:
+    item = load_menu_item_or_404(db, item_id)
+    if not item.track_inventory:
+        raise DomainValidationError("Enable inventory tracking for this item before adjusting stock")
+    if payload.delta_quantity == 0:
+        raise DomainValidationError("Stock adjustment cannot be zero")
+
+    apply_stock_delta(
+        db,
+        item,
+        delta_quantity=payload.delta_quantity,
+        reason=payload.reason,
+        note=payload.note,
+        created_by=current_user_id,
+    )
+
+    item.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def list_menu_item_stock_movements(db: Session, item_id: int) -> list[InventoryMovement]:
+    _ = load_menu_item_or_404(db, item_id)
+    return (
+        db.query(InventoryMovement)
+        .filter(InventoryMovement.menu_item_id == item_id)
+        .order_by(InventoryMovement.id.desc())
+        .limit(300)
+        .all()
+    )
 
 
 def list_tables(db: Session) -> list[RestaurantTable]:

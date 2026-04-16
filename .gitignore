@@ -1,6 +1,7 @@
 node_modules/
 dist/
 out/
+*.tsbuildinfo
 
 .venv/
 venv/
@@ -8,6 +9,7 @@ env/
 backend/.venv/
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
 __pycache__/
 *.py[cod]
@@ -21,11 +23,18 @@ htmlcov/
 tests/.tmp/
 
 database/*.db
+database/*.db-shm
+database/*.db-wal
+database/*.sqlite3
+database/*.sqlite3-*
 database/backups/
 
 *.log
 .env
 .env.*
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 .DS_Store
 Thumbs.db

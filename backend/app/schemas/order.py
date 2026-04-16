@@ -1,29 +1,30 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class OrderCreate(BaseModel):
     table_id: int | None = None
     order_type: str
-    notes: str | None = None
+    notes: str | None = Field(default=None, max_length=500)
 
 
 class OrderItemCreate(BaseModel):
     menu_item_id: int
     quantity: int
-    special_note: str | None = None
+    special_note: str | None = Field(default=None, max_length=500)
 
 
 class OrderItemUpdate(BaseModel):
     quantity: int | None = None
-    special_note: str | None = None
+    special_note: str | None = Field(default=None, max_length=500)
     kot_status: str | None = None
 
 
 class OrderItemRead(BaseModel):
     id: int
     menu_item_id: int
+    menu_item_name: str
     quantity: int
     unit_price_cents: int
     gst_percent: float

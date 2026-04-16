@@ -1,5 +1,17 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  readonly VITE_RECEIPT_NAME?: string;
+  readonly VITE_RECEIPT_ADDRESS?: string;
+  readonly VITE_RECEIPT_PHONE?: string;
+  readonly VITE_RECEIPT_GSTIN?: string;
+  readonly VITE_RECEIPT_FOOTER?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare module "*.vue" {
   import type { DefineComponent } from "vue";
   const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;

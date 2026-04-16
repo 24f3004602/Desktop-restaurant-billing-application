@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.time import utcnow
 from app.db.base import Base
 
 
@@ -16,7 +17,7 @@ class Payment(Base):
     amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     reference_no: Mapped[str | None] = mapped_column(String(80))
     paid_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
-    paid_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    paid_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
     bill: Mapped["Bill"] = relationship(back_populates="payments")
     order: Mapped["Order"] = relationship(back_populates="payments")

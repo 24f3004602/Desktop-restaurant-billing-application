@@ -21,7 +21,10 @@ function onSelectTable(tableId: number) {
 <template>
   <section class="rounded-lg border bg-white p-3 shadow">
     <h3 class="mb-3 text-sm font-semibold">Tables</h3>
-    <div class="grid grid-cols-2 gap-2">
+    <p v-if="tablesStore.loading" class="text-xs text-slate-500">Loading tables...</p>
+    <p v-else-if="tablesStore.error" class="text-xs text-red-600">{{ tablesStore.error }}</p>
+    <p v-else-if="tablesStore.tables.length === 0" class="text-xs text-slate-500">No tables found.</p>
+    <div v-else class="grid grid-cols-2 gap-2">
       <button
         v-for="table in tablesStore.tables"
         :key="table.id"

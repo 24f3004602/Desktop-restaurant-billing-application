@@ -8,6 +8,8 @@ export const useTablesStore = defineStore("tables", {
   state: () => ({
     tables: [] as RestaurantTable[],
     selectedTableId: null as number | null,
+    loading: false,
+    error: "",
   }),
   getters: {
     selectedTable: (state): RestaurantTable | null => {
@@ -19,13 +21,22 @@ export const useTablesStore = defineStore("tables", {
   },
   actions: {
     async fetchTables() {
-      const { data } = await apiClient.get<RestaurantTable[]>(endpoints.tables);
-      this.tables = data;
-      if (this.selectedTableId !== null) {
-        const stillExists = this.tables.some((table) => table.id === this.selectedTableId);
-        if (!stillExists) {
-          this.selectedTableId = null;
+      this.loading = true;
+      this.error = "";
+      try {
+        const { data } = await apiClient.get<RestaurantTable[]>(endpoints.tables);
+        this.tables = data;
+        if (this.selectedTableId !== null) {
+          const stillExists = this.tables.some((table) => table.id === this.selectedTableId);
+          if (!stillExists) {
+            this.selectedTableId = null;
+          }
         }
+      } catch (_error) {
+        this.error = "Failed to load tables.";
+        throw _error;
+      } finally {
+        this.loading = false;
       }
     },
     async createTable(payload: {

@@ -8,8 +8,8 @@ import { useAuthStore } from "../stores/auth";
 const auth = useAuthStore();
 const router = useRouter();
 
-const username = ref("admin");
-const password = ref("admin123");
+const username = ref("");
+const password = ref("");
 const errorMessage = ref("");
 
 function getErrorMessage(error: unknown): string {

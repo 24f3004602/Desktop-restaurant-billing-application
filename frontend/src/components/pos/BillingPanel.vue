@@ -57,6 +57,10 @@ async function addPayment() {
   if (amountCents <= 0) {
     return;
   }
+  if (amountCents > remainingCents.value) {
+    statusMessage.value = "Payment exceeds remaining amount.";
+    return;
+  }
 
   statusMessage.value = "";
   try {

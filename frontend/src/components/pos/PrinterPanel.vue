@@ -12,6 +12,13 @@ const orders = useOrdersStore();
 
 const { printers, loading, error, loadPrinters, printHtml, savePdf } = usePrinter();
 const status = ref("");
+const receiptBranding = {
+  name: import.meta.env.VITE_RECEIPT_NAME || "Restaurant POS",
+  address: import.meta.env.VITE_RECEIPT_ADDRESS || "",
+  phone: import.meta.env.VITE_RECEIPT_PHONE || "",
+  gstin: import.meta.env.VITE_RECEIPT_GSTIN || "",
+  footer: import.meta.env.VITE_RECEIPT_FOOTER || "Thank you for dining with us.",
+};
 
 function escapeHtml(value: string | number | null | undefined): string {
   return String(value ?? "")
@@ -65,6 +72,11 @@ const receiptHtml = computed(() => {
     })
     .join("");
 
+  const addressLine = receiptBranding.address ? `<p class="muted">${escapeHtml(receiptBranding.address)}</p>` : "";
+  const phoneLine = receiptBranding.phone ? `<p class="muted">Phone: ${escapeHtml(receiptBranding.phone)}</p>` : "";
+  const gstinLine = receiptBranding.gstin ? `<p class="muted">GSTIN: ${escapeHtml(receiptBranding.gstin)}</p>` : "";
+  const footerLine = receiptBranding.footer ? `<p class="muted" style="margin-top:10px;">${escapeHtml(receiptBranding.footer)}</p>` : "";
+
   return `<!doctype html>
   <html>
     <head>
@@ -83,7 +95,10 @@ const receiptHtml = computed(() => {
       </style>
     </head>
     <body>
-      <p class="title">Restaurant POS Receipt</p>
+      <p class="title">${escapeHtml(receiptBranding.name)} Receipt</p>
+      ${addressLine}
+      ${phoneLine}
+      ${gstinLine}
       <p class="muted">Bill No: ${escapeHtml(bill.bill_no)}</p>
       <p class="muted">Order No: ${escapeHtml(order.order_no)}</p>
       <p class="muted">Date: ${escapeHtml(formatReceiptTimestamp(new Date()))}</p>
@@ -124,6 +139,7 @@ const receiptHtml = computed(() => {
         <p><span>Discount</span><span>Rs ${formatRupees(bill.discount_cents)}</span></p>
         <p class="grand"><span>Grand Total</span><span>Rs ${formatRupees(bill.grand_total_cents)}</span></p>
       </div>
+      ${footerLine}
     </body>
   </html>`;
 });

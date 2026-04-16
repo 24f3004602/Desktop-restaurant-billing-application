@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import AuthenticationError, ConflictError, DomainValidationError, NotFoundError
 from app.core.roles import Role
+from app.core.time import utcnow
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -29,7 +30,7 @@ def authenticate_user(db: Session, username: str, password: str) -> TokenRespons
     if not user or not user.is_active:
         raise AuthenticationError("Invalid username or password")
 
-    now = datetime.utcnow()
+    now = utcnow()
     if user.locked_until and user.locked_until > now:
         raise AuthenticationError("Account is temporarily locked due to failed login attempts")
 

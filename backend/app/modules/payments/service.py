@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError, PaymentFailedError
+from app.core.time import utcnow
 from app.modules.payments.models import Bill, Payment
 from app.modules.payments.schemas import PaymentCreate
 
@@ -45,7 +44,7 @@ def add_payment(db: Session, bill_id: int, payload: PaymentCreate, current_user_
     if new_total_paid >= bill.grand_total_cents:
         bill.payment_status = "paid"
         bill.order.status = "paid"
-        bill.order.closed_at = datetime.utcnow()
+        bill.order.closed_at = utcnow()
         if bill.order.table:
             bill.order.table.status = "free"
     elif new_total_paid > 0:

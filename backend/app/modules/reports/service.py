@@ -1,14 +1,13 @@
-from datetime import datetime
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.time import utcnow
 from app.modules.reports.models import Bill, Order
 from app.modules.reports.schemas import DailySalesReport, OrderHistoryRow, SalesByDayRow
 
 
 def get_daily_sales(db: Session, date: str | None = None) -> DailySalesReport:
-    report_date = date or datetime.utcnow().date().isoformat()
+    report_date = date or utcnow().date().isoformat()
 
     total_orders, total_sales, total_tax, total_discount = (
         db.query(

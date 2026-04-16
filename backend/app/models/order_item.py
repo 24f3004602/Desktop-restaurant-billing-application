@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.time import utcnow
 from app.db.base import Base
 
 
@@ -21,7 +22,7 @@ class OrderItem(Base):
     line_subtotal_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     line_tax_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     line_total_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
     order: Mapped["Order"] = relationship(back_populates="items")
     menu_item: Mapped["MenuItem"] = relationship(back_populates="order_items")

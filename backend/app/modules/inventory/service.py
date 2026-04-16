@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, DomainValidationError, InsufficientStockError, NotFoundError
+from app.core.time import utcnow
 from app.modules.inventory.models import Category, InventoryMovement, MenuItem, RestaurantTable
 from app.modules.inventory.schemas import (
     AvailabilityUpdate,
@@ -126,7 +125,7 @@ def update_menu_item(db: Session, item_id: int, payload: MenuItemUpdate) -> Menu
     if item.track_inventory and item.stock_quantity == 0:
         item.is_available = False
 
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utcnow()
     db.commit()
     db.refresh(item)
     return item
@@ -139,7 +138,7 @@ def set_menu_item_availability(db: Session, item_id: int, payload: AvailabilityU
         raise DomainValidationError("Cannot mark item available while stock quantity is zero")
 
     item.is_available = payload.is_available
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utcnow()
     db.commit()
     db.refresh(item)
     return item
@@ -166,7 +165,7 @@ def adjust_menu_item_stock(
         created_by=current_user_id,
     )
 
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utcnow()
     db.commit()
     db.refresh(item)
     return item

@@ -15,6 +15,7 @@ const newCategoryName = ref("");
 const newItemName = ref("");
 const newItemPrice = ref(0);
 const newItemCategoryId = ref<number | null>(null);
+const newItemGstPercent = ref(5);
 const newItemTrackInventory = ref(false);
 const newItemStockQuantity = ref(0);
 const newItemLowStockThreshold = ref(5);
@@ -74,7 +75,7 @@ async function createItem() {
       name: newItemName.value.trim(),
       description: null,
       price_cents: Math.round(newItemPrice.value * 100),
-      gst_percent: 5,
+      gst_percent: newItemGstPercent.value,
       is_available: true,
       track_inventory: newItemTrackInventory.value,
       stock_quantity: newItemTrackInventory.value ? Math.max(0, Math.round(newItemStockQuantity.value)) : 0,
@@ -87,6 +88,7 @@ async function createItem() {
 
   newItemName.value = "";
   newItemPrice.value = 0;
+  newItemGstPercent.value = 5;
   newItemTrackInventory.value = false;
   newItemStockQuantity.value = 0;
   newItemLowStockThreshold.value = 5;
@@ -264,6 +266,12 @@ async function createTable() {
             </option>
           </select>
           <input v-model.number="newItemPrice" type="number" min="0" class="rounded border px-3 py-2 text-sm" placeholder="Price (Rs)" />
+          <select v-model.number="newItemGstPercent" class="rounded border px-3 py-2 text-sm">
+            <option :value="0">GST 0%</option>
+            <option :value="5">GST 5%</option>
+            <option :value="12">GST 12%</option>
+            <option :value="18">GST 18%</option>
+          </select>
           <label class="flex items-center gap-2 text-xs text-slate-600">
             <input v-model="newItemTrackInventory" type="checkbox" />
             Track inventory

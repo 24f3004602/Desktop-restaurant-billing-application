@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.time import utcnow
 from app.db.base import Base
 
 if TYPE_CHECKING:
@@ -25,8 +26,8 @@ class MenuItem(Base):
     track_inventory: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     low_stock_threshold: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     category: Mapped["Category"] = relationship(back_populates="menu_items")
     order_items: Mapped[list["OrderItem"]] = relationship(back_populates="menu_item")

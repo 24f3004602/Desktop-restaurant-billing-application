@@ -1,15 +1,15 @@
-from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, DomainValidationError, NotFoundError
+from app.core.time import utcnow
 from app.modules.billing.models import Bill, Order, OrderItem
 from app.modules.billing.schemas import BillGenerateRequest
 
 
 def make_bill_no() -> str:
-    return f"BILL-{datetime.utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
+    return f"BILL-{utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
 
 
 def compute_order_totals(order_items: list[OrderItem], discount_cents: int) -> tuple[int, int, int, int]:

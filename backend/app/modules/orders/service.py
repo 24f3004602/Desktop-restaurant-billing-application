@@ -1,16 +1,16 @@
-from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import DomainValidationError, InsufficientStockError, NotFoundError
+from app.core.time import utcnow
 from app.modules.inventory.service import apply_stock_delta
 from app.modules.orders.models import MenuItem, Order, OrderItem, RestaurantTable
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate, OrderItemUpdate
 
 
 def make_order_no() -> str:
-    return f"ORD-{datetime.utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
+    return f"ORD-{utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
 
 
 def recalculate_line(item: OrderItem) -> None:
@@ -156,6 +156,9 @@ def delete_order_item(db: Session, order_id: int, item_id: int, current_user_id:
 
 def generate_kot(db: Session, order_id: int) -> dict[str, int | str]:
     order = load_order_or_404(db, order_id)
+    if not order.items:
+        raise DomainValidationError("Cannot generate KOT for an empty order")
+
     sent_count = 0
     for item in order.items:
         if item.kot_status == "pending":

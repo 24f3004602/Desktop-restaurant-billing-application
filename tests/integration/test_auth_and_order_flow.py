@@ -269,3 +269,19 @@ def test_inventory_stock_depletion_and_restore(client):
     restored_item = next(item for item in menu_items_after_restore.json() if item["id"] == item_id)
     assert restored_item["stock_quantity"] == 3
     assert restored_item["is_available"] is True
+
+
+def test_generate_kot_rejects_empty_order(client):
+    headers = auth_headers(client)
+
+    order = client.post(
+        "/api/v1/orders",
+        json={"table_id": None, "order_type": "takeaway", "notes": "empty kot guard"},
+        headers=headers,
+    )
+    assert order.status_code == 201
+
+    kot = client.post(f"/api/v1/orders/{order.json()['id']}/kot", headers=headers)
+    assert kot.status_code == 400
+    body = kot.json()
+    assert body.get("error", {}).get("message") == "Cannot generate KOT for an empty order"

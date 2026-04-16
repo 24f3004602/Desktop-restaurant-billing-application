@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.time import utcnow
 from app.db.base import Base
 
 if TYPE_CHECKING:
@@ -20,6 +21,6 @@ class InventoryMovement(Base):
     reason: Mapped[str] = mapped_column(String(40), nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
     menu_item: Mapped["MenuItem"] = relationship(back_populates="inventory_movements")

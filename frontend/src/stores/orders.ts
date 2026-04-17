@@ -8,6 +8,7 @@ export const useOrdersStore = defineStore("orders", {
   state: () => ({
     activeOrder: null as Order | null,
     creatingOrder: false,
+    cancellingOrder: false,
   }),
   actions: {
     async createOrder(payload: { table_id?: number | null; order_type: "dine_in" | "takeaway"; notes?: string | null }) {
@@ -43,6 +44,16 @@ export const useOrdersStore = defineStore("orders", {
     async sendKot(orderId: number) {
       await apiClient.post(`${endpoints.orders}/${orderId}/kot`);
       await this.getOrder(orderId);
+    },
+    async cancelOrder(orderId: number) {
+      this.cancellingOrder = true;
+      try {
+        const { data } = await apiClient.patch<Order>(`${endpoints.orders}/${orderId}/cancel`);
+        this.activeOrder = data;
+        return data;
+      } finally {
+        this.cancellingOrder = false;
+      }
     },
     clearActiveOrder() {
       this.activeOrder = null;

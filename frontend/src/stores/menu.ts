@@ -51,5 +51,10 @@ export const useMenuStore = defineStore("menu", {
       await apiClient.post(endpoints.menuItems, payload);
       await this.fetchItems();
     },
+    async deleteMenuItem(itemId: number) {
+      await apiClient.delete(`${endpoints.menuItems}/${itemId}`);
+      delete this.stockMovementsByItem[itemId];
+      await this.fetchItems();
+    },
   },
 });

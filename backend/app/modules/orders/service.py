@@ -57,6 +57,24 @@ def get_order(db: Session, order_id: int) -> Order:
     return load_order_or_404(db, order_id)
 
 
+def cancel_order(db: Session, order_id: int) -> Order:
+    order = load_order_or_404(db, order_id)
+
+    if order.status != "open":
+        raise DomainValidationError("Only open orders can be cancelled")
+    if order.items:
+        raise DomainValidationError("Only empty orders can be cancelled")
+
+    order.status = "cancelled"
+    order.closed_at = utcnow()
+    if order.table:
+        order.table.status = "free"
+
+    db.commit()
+    db.refresh(order)
+    return order
+
+
 def add_order_item(db: Session, order_id: int, payload: OrderItemCreate, current_user_id: int) -> Order:
     order = load_order_or_404(db, order_id)
     menu_item = db.query(MenuItem).filter(MenuItem.id == payload.menu_item_id).first()

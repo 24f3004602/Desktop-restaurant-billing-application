@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 from secrets import token_urlsafe
@@ -9,6 +10,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = BACKEND_ROOT / ".env"
 ENV_EXAMPLE_FILE = BACKEND_ROOT / ".env.example"
+ENV_BOOTSTRAPPED_FLAG = "ENV_BOOTSTRAPPED"
+
+_env_bootstrapped = False
 
 
 def _parse_env(path: Path) -> dict[str, str]:
@@ -55,6 +59,12 @@ def _is_weak_password(value: str | None) -> bool:
 
 
 def bootstrap_env_file() -> None:
+    global _env_bootstrapped
+
+    if _env_bootstrapped or os.getenv(ENV_BOOTSTRAPPED_FLAG) == "1":
+        _env_bootstrapped = True
+        return
+
     values = _parse_env(ENV_FILE)
     if not values and ENV_EXAMPLE_FILE.exists():
         values = _parse_env(ENV_EXAMPLE_FILE)
@@ -76,8 +86,8 @@ def bootstrap_env_file() -> None:
     if changed:
         _write_env(ENV_FILE, values)
 
-
-bootstrap_env_file()
+    _env_bootstrapped = True
+    os.environ[ENV_BOOTSTRAPPED_FLAG] = "1"
 
 
 class Settings(BaseSettings):

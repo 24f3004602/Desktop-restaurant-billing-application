@@ -41,7 +41,7 @@ async function renderChart() {
   }
 
   salesChart = new Chart(chartCanvas.value, {
-    type: "line",
+    type: "bar",
     data: {
       labels: reports.salesByDay.map((row) => row.date),
       datasets: [
@@ -49,9 +49,8 @@ async function renderChart() {
           label: "Sales (Rs)",
           data: reports.salesByDay.map((row) => Number((row.total_sales_cents / 100).toFixed(2))),
           borderColor: "#0f766e",
-          backgroundColor: "rgba(15, 118, 110, 0.15)",
-          fill: true,
-          tension: 0.28,
+          backgroundColor: "rgba(15, 118, 110, 0.8)",
+          borderWidth: 1,
         },
       ],
     },
@@ -68,6 +67,11 @@ async function renderChart() {
             callback: (value) => `Rs ${value}`,
           },
         },
+        x: {
+          grid: {
+            display: false,
+          },
+        },
       },
     },
   });
@@ -78,8 +82,8 @@ async function loadReports() {
   try {
     await Promise.all([
       reports.fetchDaily(toDate.value),
-      reports.fetchSalesByDay({ from: fromDate.value, to: toDate.value }),
-      reports.fetchHistory({ from: fromDate.value, to: toDate.value }),
+      reports.fetchSalesByDay({ from_date: fromDate.value, to_date: toDate.value }),
+      reports.fetchHistory({ from_date: fromDate.value, to_date: toDate.value }),
     ]);
     await renderChart();
   } catch (_error) {

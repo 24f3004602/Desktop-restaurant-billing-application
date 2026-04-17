@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -6,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_session, require_roles
 from app.core.roles import Role
+from app.core.time import utcnow
 from app.models.menu_item import MenuItem
 from app.models.order import Order
 from app.models.order_item import OrderItem
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 def _make_order_no() -> str:
-    return f"ORD-{datetime.utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
+    return f"ORD-{utcnow():%Y%m%d-%H%M%S}-{uuid4().hex[:4].upper()}"
 
 
 def _recalculate_line(item: OrderItem) -> None:

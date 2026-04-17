@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { AxiosError } from "axios";
 import { onMounted } from "vue";
 import { ref } from "vue";
 
 import { useMenuStore } from "../stores/menu";
 import type { StockAdjustment } from "../types/models";
 import { useTablesStore } from "../stores/tables";
+import { getApiErrorMessage } from "../utils/api";
 import { formatReceiptTimestamp } from "../utils/date";
 
 const menuStore = useMenuStore();
@@ -31,11 +31,6 @@ const movementFromDateByItem = ref<Record<number, string>>({});
 const movementToDateByItem = ref<Record<number, string>>({});
 const movementReasonFilterByItem = ref<Record<number, string>>({});
 const actionMessage = ref("");
-
-function getApiErrorMessage(error: unknown): string {
-  const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
-  return axiosError?.response?.data?.error?.message || axiosError?.response?.data?.detail || "Request failed.";
-}
 
 onMounted(async () => {
   await Promise.all([menuStore.fetchCategories(), menuStore.fetchItems(), tablesStore.fetchTables()]);
@@ -240,6 +235,21 @@ async function createTable() {
   newTableSeats.value = 4;
   actionMessage.value = "Table created.";
 }
+
+async function deleteItem(itemId: number, itemName: string) {
+  actionMessage.value = "";
+  const confirmed = window.confirm(`Remove menu item \"${itemName}\"? This cannot be undone.`);
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await menuStore.deleteMenuItem(itemId);
+    actionMessage.value = "Menu item removed.";
+  } catch (error) {
+    actionMessage.value = getApiErrorMessage(error);
+  }
+}
 </script>
 
 <template>
@@ -433,13 +443,18 @@ async function createTable() {
           </div>
         </div>
         <div class="ml-3">
-          <button
-            class="rounded px-3 py-1 text-sm text-white"
-            :class="item.is_available ? 'bg-emerald-600' : 'bg-slate-500'"
-            @click="menuStore.toggleAvailability(item.id, !item.is_available)"
-          >
-            {{ item.is_available ? "Available" : "Unavailable" }}
-          </button>
+          <div class="flex flex-col gap-2">
+            <button
+              class="rounded px-3 py-1 text-sm text-white"
+              :class="item.is_available ? 'bg-emerald-600' : 'bg-slate-500'"
+              @click="menuStore.toggleAvailability(item.id, !item.is_available)"
+            >
+              {{ item.is_available ? "Available" : "Unavailable" }}
+            </button>
+            <button class="rounded bg-red-600 px-3 py-1 text-sm text-white" @click="deleteItem(item.id, item.name)">
+              Remove Item
+            </button>
+          </div>
         </div>
       </div>
     </div>

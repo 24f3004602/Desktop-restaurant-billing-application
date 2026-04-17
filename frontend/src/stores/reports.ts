@@ -27,6 +27,11 @@ interface SalesByDayRow {
   total_sales_cents: number;
 }
 
+interface DateRangeParams {
+  from_date?: string;
+  to_date?: string;
+}
+
 export const useReportsStore = defineStore("reports", {
   state: () => ({
     daily: null as DailySales | null,
@@ -50,11 +55,16 @@ export const useReportsStore = defineStore("reports", {
         this.isLoading = false;
       }
     },
-    async fetchHistory(params?: { from?: string; to?: string; table_id?: number }) {
+    async fetchHistory(params?: DateRangeParams & { table_id?: number }) {
       this.isLoading = true;
       this.error = "";
       try {
-        const { data } = await apiClient.get<OrderHistoryRow[]>(`${endpoints.reports}/orders/history`, { params });
+        const queryParams = {
+          from: params?.from_date,
+          to: params?.to_date,
+          table_id: params?.table_id,
+        };
+        const { data } = await apiClient.get<OrderHistoryRow[]>(`${endpoints.reports}/orders/history`, { params: queryParams });
         this.history = data;
         return data;
       } catch (_error) {
@@ -64,11 +74,15 @@ export const useReportsStore = defineStore("reports", {
         this.isLoading = false;
       }
     },
-    async fetchSalesByDay(params?: { from?: string; to?: string }) {
+    async fetchSalesByDay(params?: DateRangeParams) {
       this.isLoading = true;
       this.error = "";
       try {
-        const { data } = await apiClient.get<SalesByDayRow[]>(`${endpoints.reports}/sales-by-day`, { params });
+        const queryParams = {
+          from: params?.from_date,
+          to: params?.to_date,
+        };
+        const { data } = await apiClient.get<SalesByDayRow[]>(`${endpoints.reports}/sales-by-day`, { params: queryParams });
         this.salesByDay = data;
         return data;
       } catch (_error) {

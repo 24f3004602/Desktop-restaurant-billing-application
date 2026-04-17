@@ -4,21 +4,17 @@ import { computed, onMounted, ref } from "vue";
 import { usePrinter } from "../../composables/usePrinter";
 import { useBillingStore } from "../../stores/billing";
 import { useOrdersStore } from "../../stores/orders";
+import { useSettingsStore } from "../../stores/settings";
 import { formatCurrencyFromCents } from "../../utils/currency";
 import { formatReceiptTimestamp } from "../../utils/date";
 
 const billing = useBillingStore();
 const orders = useOrdersStore();
+const settingsStore = useSettingsStore();
 
 const { printers, loading, error, loadPrinters, printHtml, savePdf } = usePrinter();
 const status = ref("");
-const receiptBranding = {
-  name: import.meta.env.VITE_RECEIPT_NAME || "Restaurant POS",
-  address: import.meta.env.VITE_RECEIPT_ADDRESS || "",
-  phone: import.meta.env.VITE_RECEIPT_PHONE || "",
-  gstin: import.meta.env.VITE_RECEIPT_GSTIN || "",
-  footer: import.meta.env.VITE_RECEIPT_FOOTER || "Thank you for dining with us.",
-};
+const receiptBranding = computed(() => settingsStore.receipt);
 
 function escapeHtml(value: string | number | null | undefined): string {
   return String(value ?? "")
@@ -72,10 +68,10 @@ const receiptHtml = computed(() => {
     })
     .join("");
 
-  const addressLine = receiptBranding.address ? `<p class="muted">${escapeHtml(receiptBranding.address)}</p>` : "";
-  const phoneLine = receiptBranding.phone ? `<p class="muted">Phone: ${escapeHtml(receiptBranding.phone)}</p>` : "";
-  const gstinLine = receiptBranding.gstin ? `<p class="muted">GSTIN: ${escapeHtml(receiptBranding.gstin)}</p>` : "";
-  const footerLine = receiptBranding.footer ? `<p class="muted" style="margin-top:10px;">${escapeHtml(receiptBranding.footer)}</p>` : "";
+  const addressLine = receiptBranding.value.address ? `<p class="muted">${escapeHtml(receiptBranding.value.address)}</p>` : "";
+  const phoneLine = receiptBranding.value.phone ? `<p class="muted">Phone: ${escapeHtml(receiptBranding.value.phone)}</p>` : "";
+  const gstinLine = receiptBranding.value.gstin ? `<p class="muted">GSTIN: ${escapeHtml(receiptBranding.value.gstin)}</p>` : "";
+  const footerLine = receiptBranding.value.footer ? `<p class="muted" style="margin-top:10px;">${escapeHtml(receiptBranding.value.footer)}</p>` : "";
 
   return `<!doctype html>
   <html>
@@ -95,7 +91,7 @@ const receiptHtml = computed(() => {
       </style>
     </head>
     <body>
-      <p class="title">${escapeHtml(receiptBranding.name)} Receipt</p>
+      <p class="title">${escapeHtml(receiptBranding.value.name)} Receipt</p>
       ${addressLine}
       ${phoneLine}
       ${gstinLine}
@@ -178,8 +174,8 @@ async function saveReceiptPdf() {
   }
 }
 
-onMounted(() => {
-  loadPrinters();
+onMounted(async () => {
+  await Promise.all([loadPrinters(), settingsStore.loadReceiptSettings()]);
 });
 </script>
 

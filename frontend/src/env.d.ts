@@ -36,10 +36,20 @@ interface SavePdfResult {
   filePath?: string;
 }
 
+interface ReceiptSettings {
+  name: string;
+  address: string;
+  phone: string;
+  gstin: string;
+  footer: string;
+}
+
 interface Window {
   appAPI?: {
     getConfig: () => Promise<PrinterApiResponse<{ appVersion: string; platform: string }>>;
     checkForUpdates: () => Promise<PrinterApiResponse>;
+    getReceiptSettings: () => Promise<PrinterApiResponse<ReceiptSettings>>;
+    saveReceiptSettings: (payload: ReceiptSettings) => Promise<PrinterApiResponse<ReceiptSettings>>;
   };
   printerAPI?: {
     list: () => Promise<PrinterApiResponse<PrinterDevice[]>>;

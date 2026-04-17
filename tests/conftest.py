@@ -21,6 +21,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DEFAULT_ADMIN_USERNAME", "admin")
     monkeypatch.setenv("DEFAULT_ADMIN_PASSWORD", "admin123")
     monkeypatch.setenv("AUTH_LOGIN_RATE_LIMIT", "1000/minute")
+    monkeypatch.setenv("ENV_BOOTSTRAPPED", "1")
 
     from app.core.config import get_settings
 

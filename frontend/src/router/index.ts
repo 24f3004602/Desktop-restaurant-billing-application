@@ -7,6 +7,7 @@ import LoginView from "../views/LoginView.vue";
 import MenuManagementView from "../views/MenuManagementView.vue";
 import PosView from "../views/PosView.vue";
 import ReportsView from "../views/ReportsView.vue";
+import SettingsView from "../views/SettingsView.vue";
 import StaffManagementView from "../views/StaffManagementView.vue";
 
 const routes = [
@@ -17,6 +18,7 @@ const routes = [
   { path: "/staff", component: StaffManagementView, meta: { auth: true, roles: ["admin"] as Role[] } },
   { path: "/reports", component: ReportsView, meta: { auth: true, roles: ["admin", "cashier"] as Role[] } },
   { path: "/history", component: HistoryView, meta: { auth: true, roles: ["admin", "cashier", "waiter"] as Role[] } },
+  { path: "/settings", component: SettingsView, meta: { auth: true, roles: ["admin"] as Role[] } },
 ];
 
 export const router = createRouter({

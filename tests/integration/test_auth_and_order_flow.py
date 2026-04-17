@@ -285,3 +285,40 @@ def test_generate_kot_rejects_empty_order(client):
     assert kot.status_code == 400
     body = kot.json()
     assert body.get("error", {}).get("message") == "Cannot generate KOT for an empty order"
+
+
+def test_cancel_open_empty_order_releases_table(client):
+    headers = auth_headers(client)
+    suffix = uuid4().hex[:8]
+
+    table = client.post(
+        "/api/v1/tables",
+        json={"table_number": f"Cancel-{suffix}", "seats": 4, "status": "free", "is_active": True},
+        headers=headers,
+    )
+    assert table.status_code == 201
+    table_id = table.json()["id"]
+
+    order = client.post(
+        "/api/v1/orders",
+        json={"table_id": table_id, "order_type": "dine_in", "notes": "mistaken open order"},
+        headers=headers,
+    )
+    assert order.status_code == 201
+    order_id = order.json()["id"]
+
+    tables_before_cancel = client.get("/api/v1/tables", headers=headers)
+    assert tables_before_cancel.status_code == 200
+    occupied_table = next(item for item in tables_before_cancel.json() if item["id"] == table_id)
+    assert occupied_table["status"] == "occupied"
+
+    cancelled = client.patch(f"/api/v1/orders/{order_id}/cancel", headers=headers)
+    assert cancelled.status_code == 200
+    cancelled_body = cancelled.json()
+    assert cancelled_body["status"] == "cancelled"
+    assert cancelled_body["closed_at"] is not None
+
+    tables_after_cancel = client.get("/api/v1/tables", headers=headers)
+    assert tables_after_cancel.status_code == 200
+    released_table = next(item for item in tables_after_cancel.json() if item["id"] == table_id)
+    assert released_table["status"] == "free"

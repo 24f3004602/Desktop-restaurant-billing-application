@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import type { AxiosError } from "axios";
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
 import { useMenuStore } from "../../stores/menu";
+import { useNotificationsStore } from "../../stores/notifications";
+import { getApiErrorMessage } from "../../utils/api";
 
 const menuStore = useMenuStore();
+const notifications = useNotificationsStore();
 const loading = ref(false);
 const errorMessage = ref("");
+const knownLowStockIds = ref<number[]>([]);
+let refreshTimer: number | null = null;
 
 const trackedInventoryCount = computed(() => menuStore.items.filter((item) => item.track_inventory).length);
 const lowStockItems = computed(() =>
@@ -16,18 +20,28 @@ const lowStockItems = computed(() =>
 );
 const outOfStockCount = computed(() => lowStockItems.value.filter((item) => item.stock_quantity <= 0).length);
 
-function getApiErrorMessage(error: unknown): string {
-  const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
-  return axiosError?.response?.data?.error?.message || axiosError?.response?.data?.detail || "Failed to load inventory.";
-}
-
 async function refreshInventory() {
+  if (loading.value) {
+    return;
+  }
+
   loading.value = true;
   errorMessage.value = "";
   try {
     await menuStore.fetchItems();
+    const currentIds = lowStockItems.value.map((item) => item.id).sort((a, b) => a - b);
+    if (knownLowStockIds.value.length > 0) {
+      const newIds = currentIds.filter((id) => !knownLowStockIds.value.includes(id));
+      if (newIds.length > 0) {
+        notifications.push({
+          message: `${newIds.length} additional item(s) entered low stock.`,
+          type: "warning",
+        });
+      }
+    }
+    knownLowStockIds.value = currentIds;
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error);
+    errorMessage.value = getApiErrorMessage(error, "Failed to load inventory.");
   } finally {
     loading.value = false;
   }
@@ -36,6 +50,19 @@ async function refreshInventory() {
 onMounted(async () => {
   if (menuStore.items.length === 0) {
     await refreshInventory();
+  } else {
+    knownLowStockIds.value = lowStockItems.value.map((item) => item.id).sort((a, b) => a - b);
+  }
+
+  refreshTimer = window.setInterval(() => {
+    void refreshInventory();
+  }, 60000);
+});
+
+onBeforeUnmount(() => {
+  if (refreshTimer !== null) {
+    window.clearInterval(refreshTimer);
+    refreshTimer = null;
   }
 });
 </script>

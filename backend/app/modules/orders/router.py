@@ -8,6 +8,7 @@ from app.modules.orders.models import Order
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate, OrderItemUpdate, OrderRead
 from app.modules.orders.service import (
     add_order_item,
+    cancel_order,
     create_order,
     delete_order_item,
     generate_kot,
@@ -34,6 +35,15 @@ def fetch_order(
     _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
 ) -> Order:
     return get_order(db, order_id)
+
+
+@router.patch("/{order_id}/cancel", response_model=OrderRead)
+def cancel_open_order(
+    order_id: int,
+    db: Session = Depends(get_db_session),
+    _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER, Role.WAITER)),
+) -> Order:
+    return cancel_order(db, order_id)
 
 
 @router.post("/{order_id}/items", response_model=OrderRead)

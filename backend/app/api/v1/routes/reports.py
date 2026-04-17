@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_session, require_roles
 from app.core.roles import Role
+from app.core.time import utcnow
 from app.models.bill import Bill
 from app.models.order import Order
 from app.models.user import User
@@ -20,7 +19,7 @@ def daily_sales(
     db: Session = Depends(get_db_session),
     _user: User = Depends(require_roles(Role.ADMIN, Role.CASHIER)),
 ) -> DailySalesReport:
-    report_date = date or datetime.utcnow().date().isoformat()
+    report_date = date or utcnow().date().isoformat()
 
     total_orders, total_sales, total_tax, total_discount = (
         db.query(

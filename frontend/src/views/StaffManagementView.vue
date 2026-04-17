@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { AxiosError } from "axios";
 import { onMounted, reactive, ref } from "vue";
 
 import { useUsersStore } from "../stores/users";
 import type { Role } from "../types/models";
+import { getApiErrorMessage } from "../utils/api";
 
 const usersStore = useUsersStore();
 const statusMessage = ref("");
@@ -28,11 +28,6 @@ function syncDrafts() {
     };
   }
   userDrafts.value = nextDrafts;
-}
-
-function getApiErrorMessage(error: unknown): string {
-  const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string }>;
-  return axiosError?.response?.data?.error?.message || axiosError?.response?.data?.detail || "Request failed.";
 }
 
 async function loadUsers() {

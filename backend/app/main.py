@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +8,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.api.v1.router import api_router
-from app.core.config import get_settings
+from app.core.config import bootstrap_env_file, get_settings
 from app.core.exceptions import AppError
 from app.core.rate_limiter import limiter
 from app.core.roles import Role
@@ -16,9 +18,21 @@ from app.db.session import SessionLocal
 from app.logging import configure_logging
 from app.models.user import User
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    global settings
+    bootstrap_env_file()
+    get_settings.cache_clear()
+    settings = get_settings()
+    init_db()
+    _seed_default_admin()
+    yield
+
+
 settings = get_settings()
 configure_logging()
-app = FastAPI(title=settings.app_name)
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -82,9 +96,3 @@ def _seed_default_admin() -> None:
         db.commit()
     finally:
         db.close()
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    init_db()
-    _seed_default_admin()

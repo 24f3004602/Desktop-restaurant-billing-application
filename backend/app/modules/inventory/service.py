@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, DomainValidationError, InsufficientStockError, NotFoundError
 from app.core.time import utcnow
+from app.models.order_item import OrderItem
 from app.modules.inventory.models import Category, InventoryMovement, MenuItem, RestaurantTable
 from app.modules.inventory.schemas import (
     AvailabilityUpdate,
@@ -142,6 +143,16 @@ def set_menu_item_availability(db: Session, item_id: int, payload: AvailabilityU
     db.commit()
     db.refresh(item)
     return item
+
+
+def delete_menu_item(db: Session, item_id: int) -> None:
+    item = load_menu_item_or_404(db, item_id)
+    has_order_history = db.query(OrderItem.id).filter(OrderItem.menu_item_id == item_id).first()
+    if has_order_history:
+        raise ConflictError("Cannot delete menu item with order history")
+
+    db.delete(item)
+    db.commit()
 
 
 def adjust_menu_item_stock(

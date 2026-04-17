@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_session, require_roles
 from app.core.roles import Role
+from app.core.time import utcnow
 from app.models.category import Category
 from app.models.menu_item import MenuItem
 from app.models.user import User
@@ -55,7 +54,7 @@ def update_menu_item(
     for key, value in update_data.items():
         setattr(item, key, value)
 
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utcnow()
     db.commit()
     db.refresh(item)
     return item
@@ -73,7 +72,7 @@ def set_menu_item_availability(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Menu item not found")
 
     item.is_available = payload.is_available
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utcnow()
     db.commit()
     db.refresh(item)
     return item

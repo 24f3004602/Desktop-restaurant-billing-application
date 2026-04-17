@@ -24,6 +24,7 @@ from app.modules.inventory.service import (
     create_category,
     create_menu_item,
     create_table,
+    delete_menu_item,
     adjust_menu_item_stock,
     list_categories,
     list_menu_items,
@@ -85,6 +86,15 @@ def patch_menu_item(
     _user: User = Depends(require_roles(Role.ADMIN)),
 ) -> MenuItem:
     return update_menu_item(db, item_id, payload)
+
+
+@router.delete("/menu-items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_menu_item(
+    item_id: int,
+    db: Session = Depends(get_db_session),
+    _user: User = Depends(require_roles(Role.ADMIN)),
+) -> None:
+    delete_menu_item(db, item_id)
 
 
 @router.patch("/menu-items/{item_id}/availability", response_model=MenuItemRead)
